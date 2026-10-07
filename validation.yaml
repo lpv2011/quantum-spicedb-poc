@@ -1,0 +1,57 @@
+# Run: zed validate validation.yaml
+schemaFile: ./schema.zed
+
+relationships: |-
+  // folder tree
+  folder:home/a#parent@folder:home
+  folder:home/a/b#parent@folder:home/a
+  folder:home/a/b/c#parent@folder:home/a/b
+  folder:home/o#parent@folder:home
+  folder:home/o/dir1#parent@folder:home/o
+  folder:home/o/dir2#parent@folder:home/o
+
+  // anne: read via group on root
+  group:eng#member@user:anne
+  folder:home#reader@group:eng#member
+
+  // bob: read on root, denied on home/a  (nested deny, #1282)
+  folder:home#reader@user:bob
+  folder:home/a#denied@user:bob
+
+  // carol: allowed only on home/o/dir1  (deep allow, #1903)
+  folder:home/o/dir1#reader@user:carol
+  folder:home/o#traverser@user:carol
+  folder:home#traverser@user:carol
+
+  // dana: write on root, denied on home/a/b
+  folder:home#writer@user:dana
+  folder:home/a/b#denied@user:dana
+
+assertions:
+  assertTrue:
+    # anne inherits through group + parent chain
+    - "folder:home/a/b/c#view@user:anne"
+    # bob keeps root, loses the denied folder AND everything nested under it
+    - "folder:home#view@user:bob"
+    - "folder:home/o/dir2#view@user:bob"
+    # carol can open dir1 and walk the path to it
+    - "folder:home/o/dir1#view@user:carol"
+    - "folder:home/o#browse@user:carol"
+    - "folder:home#browse@user:carol"
+    # dana can edit above the deny
+    - "folder:home#edit@user:dana"
+    - "folder:home/a#edit@user:dana"
+  assertFalse:
+    - "folder:home/a#view@user:bob"
+    - "folder:home/a/b#view@user:bob"
+    - "folder:home/a/b/c#view@user:bob"
+    # carol sees neither the parent contents nor the sibling
+    - "folder:home/o#view@user:carol"
+    - "folder:home#view@user:carol"
+    - "folder:home/o/dir2#view@user:carol"
+    - "folder:home/o/dir2#browse@user:carol"
+    - "folder:home/a#browse@user:carol"
+    # dana is blocked at and below the deny
+    - "folder:home/a/b#edit@user:dana"
+    - "folder:home/a/b/c#edit@user:dana"
+    - "folder:home/a/b/c#view@user:dana"

@@ -1,0 +1,7 @@
+# In-memory SpiceDB for local PoC runs. State is lost on restart.
+services:
+  spicedb:
+    image: authzed/spicedb:latest
+    command: serve --grpc-preshared-key devkey --datastore-engine memory
+    ports:
+      - "50051:50051"

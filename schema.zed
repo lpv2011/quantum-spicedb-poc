@@ -1,0 +1,31 @@
+// FileBrowser Quantum permission model (PoC).
+// Maps Quantum's allow / deny rules on paths to SpiceDB relationships.
+
+definition user {}
+
+definition group {
+    relation member: user | group#member
+}
+
+definition folder {
+    // structure: one relationship per path segment
+    relation parent: folder
+
+    // grants and denies (users or whole groups)
+    relation reader: user | group#member
+    relation writer: user | group#member
+    relation denied: user | group#member
+
+    // written on every ancestor of a deep allow so the user can walk down to it
+    // without seeing siblings (issue #1903)
+    relation traverser: user | group#member
+
+    // a deny on a folder blocks that folder and everything beneath it (issue #1282)
+    permission blocked = denied + parent->blocked
+
+    permission view = (reader + writer + parent->view) - blocked
+    permission edit = (writer + parent->edit) - blocked
+
+    // may list this folder's entry in a file tree (own access or on the path to a grant)
+    permission browse = (view + traverser) - blocked
+}
