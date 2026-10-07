@@ -4,10 +4,10 @@ Proof of concept: keep FileBrowser Quantum's path-based allow/deny rules in Spic
 inheritance and denial are decided in one place instead of per endpoint.
 
 Targets two public issues in gtsteffaniak/filebrowser:
-- #1282 deny rules not applied to nested folders
-- #1903 allowing a deep path does not make its parents navigable
+- [#1282](https://github.com/gtsteffaniak/filebrowser/issues/1282) deny rules not applied to nested folders
+- [#1903](https://github.com/gtsteffaniak/filebrowser/issues/1903) allowing a deep path does not make its parents navigable
 
-## Status (be honest)
+## Status
 
 | Piece | Status |
 |---|---|
@@ -15,7 +15,7 @@ Targets two public issues in gtsteffaniak/filebrowser:
 | `authz/` Go adapter + tests | Written. **Not yet compiled or run** |
 | Wiring into Quantum's real endpoints | Not started |
 
-## Run it
+## Run
 
     brew install authzed/tap/zed
     make validate                         # zed validate validation.yaml
@@ -29,11 +29,3 @@ Fix whatever `make validate` / `go test` report and update the table above.
 - `blocked = denied + parent->blocked` makes a deny inherit down the tree
 - `traverser` is written on every ancestor of a deep allow; `browse = (view + traverser) - blocked`
 
-## Open questions (need the maintainer or Quantum's source)
-
-1. Precedence: here any ancestor deny beats any allow. Does Quantum agree?
-2. `denyAll` and `denyByDefault` are not modeled yet (default-deny is simply no grant).
-3. Shares: a share must never exceed its creator's own access (v1.5.2 advisory); not modeled.
-4. Datastore: Quantum defaults to SQLite, which SpiceDB does not list. Needs a sidecar,
-   or SpiceDB's embedded mode (unverified).
-5. Postgres run: see `docker-compose.postgres.yaml` in the authzed/spicedb repo.
